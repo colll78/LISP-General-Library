@@ -1,0 +1,108 @@
+
+-----------------------------------------------------------------------------
+
+First let's prove that
+U = (u/v) * V
+
+We are given, 
+    U = u U-normalized
+    V = v V-normalized
+
+equivalently,
+    U/u = U-normalized
+    V/v = V-normalized
+
+and we know conversion is only possible when,
+    U-normalized = V-normalized
+
+Thus, through the transitive property of equality,
+    U/u = U-normalized
+    U-normalized = V-normalized
+we obtain U/u = V-normalized.
+
+Then through substitution we get,
+    U/u = V/v
+
+From here through the properties of algebra,
+    U/u * u = V/v * u
+    U = uV/u
+since multiplication and division have the same precedence,
+    uV/u = (u/v) V
+Finally, we once again apply the transitive property of equality
+yielding U = (u/v) V. This concludes the proof. 
+-----------------------------------------------------------------------------
+
+
+This project was relatively easy. I did, however, waste a large amount of
+time by writing code before actually thinking about the problem at hand.
+In imperative languages, while likely not the best approach, immediately
+jolting down code will, more often than not, be reasonable productive.
+So I started the project by making a plethora of helper function which
+I predicted would be useful for the task at hand such as:
+    is-every-unit-base 
+	- a function to check if a unitlist consisted of only basic units.
+    sort-basic-units
+	- a function to sort units of a normalized unit list based on some 
+        predetermined order, which I figured would be necessary to
+        determine the equivalence of two normalized unit lists.     
+ect...
+
+In the end, I didn't use these functions at all. This taught me that 
+designing a solution prior to implementing it is very important in
+functional programming. The project became much easier after
+taking out a pen and paper and drafting up a (very abstract)
+solution by hand. 
+
+As for ways I might improve if I continued to work on it,
+my first priority would be to design a meta-language
+to allow for more user friendly input. The meta-language would
+consist of the following grammar productions:
+           <convert> =:: quantity <unitlist> keyword_to <unitlist>
+          <unitlist> =:: <unit> <unitlist> | <unit> 
+              <unit> =:: [<mass_production>] | [<length_production>] |
+                         [<time_production>] 
+   <mass_production> =:: mass_token [p_exponent_token] 
+                                    [<length_production>]
+ <length_production> =:: length_token [p_exponent_token] 
+                                      [per_keyword <time_production>] |
+                         [b_exponent_token] length_token 
+                                      [per_keyword <time_production>] 
+   <time_production> =:: time_token [p_exponent_token]
+	  
+The language above is described in standard EBNF where
+<..> surrounds a production.
+[..] denotes that the surrounded terminal or production is optional.
+| denotes alternation (union). 
+Strings not enclosed in <...> are terminals.
+
+All terminals are described below as python regular expressions:
+time_token = secs?|mins?|seconds?|minutes?|hours?|days?|months?|years?
+mass_token = kg | kilograms? | (and so on)
+length_token = m | meters? (and so on)
+p_exponent_token = \^[0-9]* | squared | cubed 
+b_exponent_token = square | cubic
+keyword_to = to
+keyword_per = per | /
+quantity = one | two | three | four | [0-9](.[0-9]*)?
+
+? matches the preceding character between zero and one times.
+| denotes alternation (union) 
+* matches the preceding character any number of times (greedy).
+[..] matches if any character in the brackets matches.
+(..) denotes a grouping (...)? optionally matches the entire sequence
+0-9 expands to 0132456789
+\^ matches the literal ^
+
+The user would describe their desired conversions with this meta-language 
+in some textfile.
+
+I would implement a program which takes user input in the form of a 
+textfile containing conversions described by this meta-language.
+The program would generate the equivalent scheme expression 
+for each statement of the meta-language.
+
+For instance, it would convert the meta-language statement:
+    1 kilogram meter per second squared to newtons
+into,
+    (convert '(1 (kg 1) (meter 1) (second 2)) '((N 1)))
+
